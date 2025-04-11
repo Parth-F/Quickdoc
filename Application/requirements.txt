@@ -3,3 +3,5 @@ flask-cors
 langchain
 langchain-community
 chromadb
+gunicorn
+python-dotenv
