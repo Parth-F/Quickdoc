@@ -4,7 +4,8 @@ import json
 import os
 
 # Get backend URL from environment variable with a default fallback
-BACKEND_URL = os.environ.get("BACKEND_URL", "http://backend:5000")
+# In production, this should be set to the internal API URL
+BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:5000")
 
 # st.title("Chatbot with Custom LLM")
 
@@ -21,6 +22,23 @@ mode = st.sidebar.radio(
     ["Flagship (FineTune)", "Augmented (RAG)"],
     index=0
 )
+
+# GCP bucket explorer
+st.sidebar.markdown("## GCP Bucket Explorer")
+bucket_name = st.sidebar.text_input("Enter Bucket Name:")
+if st.sidebar.button("List Files") and bucket_name:
+    try:
+        # Initialize GCP storage client
+        storage_client = storage.Client()
+        bucket = storage_client.get_bucket(bucket_name)
+        blobs = bucket.list_blobs()
+        
+        # Display files in the bucket
+        st.sidebar.markdown("### Files in Bucket:")
+        for blob in blobs:
+            st.sidebar.text(blob.name)
+    except Exception as e:
+        st.sidebar.error(f"Error accessing bucket: {str(e)}")
 
 # Display chat messages
 for message in st.session_state.messages:
@@ -57,7 +75,7 @@ if prompt := st.chat_input("Ask a medical question..."):
             
             # Make the API request to the backend using the environment variable
             response = requests.post(
-                f"{BACKEND_URL}/{endpoint}",
+                f"{BACKEND_URL}/api/{endpoint}",
                 json={"query_text": prompt},
                 timeout=60
             )

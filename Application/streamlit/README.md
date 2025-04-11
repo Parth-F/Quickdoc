@@ -1,56 +1,80 @@
 # QuickDoc AI Streamlit Frontend
 
-This is the Streamlit-based frontend for the QuickDoc AI medical chatbot.
+This is the Streamlit frontend for the QuickDoc AI medical chatbot application.
 
-## Deployment to Google Cloud Run
+## Overview
 
-### Prerequisites
-- Google Cloud SDK (gcloud) installed and configured
-- Docker installed on your local machine
-- Access to a Google Cloud Project with Cloud Run API enabled
+The Streamlit frontend provides a user-friendly interface for interacting with the QuickDoc AI backend. It allows users to:
 
-### Steps to Deploy
+- Ask medical questions
+- Choose between different LLM models (Flagship or Augmented)
+- View chat history
+- Start new conversations
 
-1. **Build and push the Docker image to Google Container Registry**
+## Deployment on Google Cloud Platform VM
 
-```bash
-# Navigate to the streamlit directory
-cd Application/streamlit
+Follow these steps to deploy the Streamlit frontend on your GCP VM:
 
-# Build the Docker image
-docker build -t gcr.io/YOUR_PROJECT_ID/quickdoc-streamlit .
+1. Make sure you're in the project root directory:
+   ```
+   cd /path/to/your/project
+   ```
 
-# Push the image to Google Container Registry
-docker push gcr.io/YOUR_PROJECT_ID/quickdoc-streamlit
-```
+2. Run the deployment script:
+   ```
+   ./streamlit/deploy_streamlit.sh
+   ```
 
-2. **Deploy to Cloud Run**
+   This script will:
+   - Install necessary dependencies
+   - Create a virtual environment for Streamlit
+   - Set up a systemd service for running Streamlit
+   - Configure Nginx as a reverse proxy
+   - Start the Streamlit application
 
-```bash
-gcloud run deploy quickdoc-streamlit \
-  --image gcr.io/YOUR_PROJECT_ID/quickdoc-streamlit \
-  --platform managed \
-  --region YOUR_PREFERRED_REGION \
-  --allow-unauthenticated \
-  --set-env-vars "BACKEND_URL=https://your-backend-service-url.a.run.app"
-```
+3. Access the application through your VM's IP address on port 80:
+   ```
+   http://<your-vm-ip>/
+   ```
 
-Replace:
-- `YOUR_PROJECT_ID` with your Google Cloud Project ID
-- `YOUR_PREFERRED_REGION` with your preferred Google Cloud region (e.g., us-central1)
-- Set the `BACKEND_URL` to point to your backend service's URL
+## Manual Setup (If Needed)
 
-3. **Access your deployed application**
+If you prefer to set up the application manually:
 
-After deployment, Cloud Run will provide a URL to access your application.
+1. Create a virtual environment:
+   ```
+   python3 -m venv streamlit_venv
+   source streamlit_venv/bin/activate
+   ```
 
-### Local Testing
+2. Install dependencies:
+   ```
+   pip install -r streamlit/requirements.txt
+   ```
 
-To test locally before deploying:
+3. Run the Streamlit application:
+   ```
+   export BACKEND_URL=http://localhost:5000
+   streamlit run streamlit/main.py --server.port=8501 --server.address=0.0.0.0
+   ```
 
-```bash
-docker build -t quickdoc-streamlit .
-docker run -p 8080:8080 -e BACKEND_URL=http://localhost:5000 quickdoc-streamlit
-```
+## Environment Variables
 
-Then access the application at http://localhost:8080 
+- `BACKEND_URL`: URL of the backend API (default: http://localhost:5000)
+
+## Monitoring and Troubleshooting
+
+- Check Streamlit service logs:
+  ```
+  sudo journalctl -u streamlit -f
+  ```
+
+- Restart the Streamlit service:
+  ```
+  sudo systemctl restart streamlit
+  ```
+
+- Check Nginx logs:
+  ```
+  sudo tail -f /var/log/nginx/error.log
+  ```
