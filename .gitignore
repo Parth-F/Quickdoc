@@ -1,2 +1,3 @@
+.gitignore
 Application/client/node_modules
 Applicatoin/client/build
