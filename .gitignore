@@ -1,3 +1,8 @@
+Models/
+node_modules
+client/node_modules
+client/build
+App/__pycache__
+__pycache__
 .gitignore
-Application/client/node_modules
-Applicatoin/client/build
+.env
