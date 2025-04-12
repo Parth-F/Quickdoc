@@ -2,18 +2,10 @@
 
 # Install system dependencies if needed
 sudo apt-get update
-sudo apt-get install -y python3-pip python3-venv nginx
+sudo apt-get install -y python3-pip nginx
 
-# Create a virtual environment for Streamlit if it doesn't exist
-if [ ! -d "streamlit_venv" ]; then
-    python3 -m venv streamlit_venv
-fi
-
-# Activate the virtual environment
-source streamlit_venv/bin/activate
-
-# Install Streamlit and other dependencies
-pip install -r streamlit/requirements.txt
+# Install Streamlit and other dependencies directly to system Python
+sudo pip3 install -r Frontend/requirements.txt
 
 # Create Systemd service file for Streamlit
 sudo tee /etc/systemd/system/streamlit.service << EOF
@@ -24,10 +16,9 @@ After=network.target
 [Service]
 User=$(whoami)
 WorkingDirectory=$(pwd)
-Environment="PATH=$(pwd)/streamlit_venv/bin"
 Environment="BACKEND_URL=http://localhost:5000"
 Environment="PYTHONPATH=$(pwd)"
-ExecStart=$(pwd)/streamlit_venv/bin/streamlit run streamlit/main.py --server.port=8501 --server.address=0.0.0.0
+ExecStart=/usr/bin/python3 -m streamlit run Frontend/main.py --server.port=8501 --server.address=0.0.0.0
 Restart=always
 RestartSec=5
 

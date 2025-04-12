@@ -22,7 +22,7 @@ Follow these steps to deploy the Streamlit frontend on your GCP VM:
 
 2. Run the deployment script:
    ```
-   ./streamlit/deploy_streamlit.sh
+   ./Frontend/deploy_frontend.sh
    ```
 
    This script will:
@@ -49,13 +49,13 @@ If you prefer to set up the application manually:
 
 2. Install dependencies:
    ```
-   pip install -r streamlit/requirements.txt
+   pip install -r Frontend/requirements.txt
    ```
 
 3. Run the Streamlit application:
    ```
    export BACKEND_URL=http://localhost:5000
-   streamlit run streamlit/main.py --server.port=8501 --server.address=0.0.0.0
+   streamlit run Frontend/main.py --server.port=8501 --server.address=0.0.0.0
    ```
 
 ## Environment Variables

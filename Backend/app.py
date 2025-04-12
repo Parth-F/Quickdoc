@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from langchain_community.llms.ollama import Ollama
+from langchain_community.llms import LlamaCpp
 from langchain_community.vectorstores import Chroma
 from langchain.prompts import ChatPromptTemplate
 import warnings
@@ -9,6 +9,7 @@ from get_embedding_function import get_embedding_function
 
 warnings.filterwarnings("ignore")
 CHROMA_PATH = "chroma"
+MODEL_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Models", "model.gguf")
 
 PROMPT_TEMPLATE = """
 You are a medical professional. Answer the question based only on the following context like a human would. It should consist of paragraph and conversational aspect rather than just a summary. Answer the asked question briefly. Answer in a professional tone:
@@ -39,7 +40,15 @@ def query_rag(query_text: str):
         prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
         prompt = prompt_template.format(context=context_text, question=query_text)
         print(prompt)
-        model = Ollama(model="llama3")
+        
+        # Load the LLM directly from the GGUF file
+        model = LlamaCpp(
+            model_path=MODEL_PATH,
+            temperature=0.1,
+            max_tokens=1024,
+            n_ctx=2048,
+            verbose=False
+        )
         response_text = model.invoke(prompt)
 
         sources = [doc.metadata.get("id", None) for doc, _score in results]
@@ -52,14 +61,41 @@ def query_rag(query_text: str):
 
 def query_finetune(prompt: str):
     try:
-        gatePrompt = f"<|start_header_id|>system<|end_header_id|>I will now give you a question. This question should only be related to medical queries or advice. If it is related to medical queries or advice, then reply with 'True' and nothing else, no explanation, nothing, just 'True'. If it's not related to medical info, then just say 'False' and nothing else, no explanation, nothing, just 'False'. Just reply with either True or False and nothing else.<|eot_id|><|start_header_id|>user<|end_header_id|> This is the question: {prompt}<|eot_id|>"
-        gatedModel = Ollama(model="llama3")
-        gateResult = gatedModel.invoke(gatePrompt)
-        if gateResult=="False":
+        # Load the LLM directly
+        model = LlamaCpp(
+            model_path=MODEL_PATH,
+            temperature=0.1,
+            max_tokens=1024,
+            n_ctx=2048,
+            verbose=False
+        )
+        
+        # First check if the query is medical-related
+        gatePrompt = f"""
+        I will now give you a question. This question should only be related to medical queries or advice. 
+        If it is related to medical queries or advice, then reply with 'True' and nothing else. 
+        If it's not related to medical info, then just say 'False' and nothing else.
+        
+        Question: {prompt}
+        
+        Answer (True/False):
+        """
+        
+        gateResult = model.invoke(gatePrompt).strip()
+        
+        if gateResult.lower() == "false":
             return "This query is not related to medical field. Please ask related queries."
-        prompt = f"<|start_header_id|>system<|end_header_id|> Answer the question truthfully, you are a medical professional. If the question is not related to health or gibberish, reply that you are a medical professional and cannot answer it.<|eot_id|><|start_header_id|>user<|end_header_id|> This is the question: {prompt}<|eot_id|>"
-        model = Ollama(model="medical-llama")
-        response_text = model.invoke(prompt)
+            
+        medicalPrompt = f"""
+        You are a medical professional. Answer the following question truthfully and professionally.
+        If the question is not related to health, reply that you are a medical professional and cannot answer it.
+        
+        Question: {prompt}
+        
+        Answer:
+        """
+        
+        response_text = model.invoke(medicalPrompt)
         print(response_text)
         return response_text
     except Exception as e:
