@@ -1,6 +1,6 @@
 __pycache__
 Backend/__pycache__
-# client
+client
 node_modules
 client/node_modules
 client/build
