@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Get local IP address
+LOCAL_IP=$(hostname -I | awk '{print $1}')
+
 # Install system dependencies if needed
 sudo apt-get update
 sudo apt-get install -y python3-pip nginx
@@ -14,11 +17,11 @@ Description=Streamlit Web Application
 After=network.target
 
 [Service]
-User=$(whoami)
+User=$USER
 WorkingDirectory=$(pwd)
-Environment="BACKEND_URL=http://localhost:5000"
+Environment="BACKEND_URL=http://${LOCAL_IP}:5000"
 Environment="PYTHONPATH=$(pwd)"
-ExecStart=/usr/bin/python3 -m streamlit run Frontend/main.py --server.port=8501 --server.address=0.0.0.0
+ExecStart=/usr/bin/python3 -m streamlit run Frontend/streamlit.py --server.port=8501 --server.address=0.0.0.0
 Restart=always
 RestartSec=5
 
@@ -43,7 +46,7 @@ server {
     }
 
     location /api {
-        proxy_pass http://localhost:5000;
+        proxy_pass http://${LOCAL_IP}:5000;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
     }
@@ -69,4 +72,5 @@ sudo systemctl status nginx --no-pager
 
 echo ""
 echo "Deployment complete! Your Streamlit app should now be running at http://$(hostname -I | awk '{print $1}')"
+echo "Backend API is configured at http://${LOCAL_IP}:5000"
 echo "You can check the logs with: sudo journalctl -u streamlit -f" 

@@ -1,9 +1,10 @@
+__pycache__
+Backend/__pycache__
+# client
 node_modules
-client
 client/node_modules
 client/build
-Backend/__pycache__
-__pycache__
 .env
 .gitignore
-Models/
+llama.cpp/
+Models/model.gguf

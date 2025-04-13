@@ -55,7 +55,7 @@ If you prefer to set up the application manually:
 3. Run the Streamlit application:
    ```
    export BACKEND_URL=http://localhost:5000
-   streamlit run Frontend/main.py --server.port=8501 --server.address=0.0.0.0
+   streamlit run Frontend/streamlit.py --server.port=8501 --server.address=0.0.0.0
    ```
 
 ## Environment Variables
